@@ -83,7 +83,7 @@ class Sourcemap:
                 "Delete it or consider using overwrite=True"
             )
             raise PyUnpackSourcemapException(msg)
-        for source_path, source_content in self.get_content_map():
+        for source_path, source_content in self.get_content_map().items():
             source_path = source_path.replace("://", "/")
             target_path = output_dir.joinpath(source_path)
             target_path.parent.mkdir(parents=True, exist_ok=True)
