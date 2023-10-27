@@ -1,7 +1,10 @@
-from dataclasses import dataclass
-
-
 # TODO: Add subclasses
-@dataclass
+
+
 class PyUnpackSourcemapException(Exception):
-    message: str
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+
+
+class SourcemapParsingException(PyUnpackSourcemapException):
+    pass

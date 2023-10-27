@@ -2,9 +2,9 @@ import json
 from dataclasses import dataclass
 from os import PathLike
 from pathlib import Path
-from typing import Any, TypeAlias, Union
+from typing import Any, Optional, TypeAlias, Union
 
-from ._exceptions import PyUnpackSourcemapException
+from ._exceptions import PyUnpackSourcemapException, SourcemapParsingException
 from ._logging import logger
 
 AnyPath: TypeAlias = Union[Path, PathLike[str], str]
@@ -15,42 +15,74 @@ class Sourcemap:
     """Representation of a source map"""
 
     version: int
+    file: Optional[str]
+    sourceRoot: Optional[str]
     sources: list[str]
-    sources_content: list[str]
+    sourcesContent: Optional[list[str]]
+    names: list[str]
+    mappings: str
 
     def __post_init__(self):
         if self.version != 3:
-            logger.warning(
-                "Only source maps of version 3 are supported, "
-                f"found version {self.version}"
-            )
+            logger.warning(f"Unsupported source map version ({self.version})")
         if not self.sources:
-            msg = "Source map doesn't contain any sources"
+            msg = "Source map does not contain any sources"
             raise PyUnpackSourcemapException(msg)
-        if len(self.sources) != len(self.sources_content):
+        if self.sourcesContent and len(self.sources) != len(self.sourcesContent):
             msg = (
                 "Number of sources and sourcesContent items do not match "
-                f"({len(self.sources)} != {len(self.sources_content)})"
+                f"({len(self.sources)} != {len(self.sourcesContent)})"
             )
             raise PyUnpackSourcemapException(msg)
 
     @classmethod
-    def from_json(cls, data: dict[str, Any]):
+    def from_dict(cls, data: dict[str, Any]):
         data = data.copy()
-        version = data.pop("version")
-        sources = data.pop("sources", [])
-        sources_content = data.pop("sourcesContent", [])
-        for unsupported_key in data:
-            logger.warning('Unsupported key found in source map: "%s"', unsupported_key)
-        return cls(
+
+        version = data.pop("version", None)
+        file = data.pop("file", None)
+        sourceRoot = data.pop("sourceRoot", None)
+        sources = data.pop("sources", None)
+        sourcesContent = data.pop("sourcesContent", None)
+        names = data.pop("names", None)
+        mappings = data.pop("mappings", None)
+
+        missing_fields = []
+        if version is None:
+            missing_fields.append("version")
+        if sources is None:
+            missing_fields.append("sources")
+        if names is None:
+            missing_fields.append("names")
+        if mappings is None:
+            missing_fields.append("mappings")
+        if missing_fields:
+            msg = f"Source map is missing required fields: {missing_fields}"
+            raise SourcemapParsingException(msg)
+
+        result = cls(
             version=version,
+            file=file,
+            sourceRoot=sourceRoot,
             sources=sources,
-            sources_content=sources_content,
+            sourcesContent=sourcesContent,
+            names=names,
+            mappings=mappings,
         )
 
+        for unsupported_key, value in data:
+            logger.warning('Unsupported key found in source map: "%s"', unsupported_key)
+            setattr(result, unsupported_key, value)
+
+        return result
+
     @classmethod
-    def from_str(cls, data: str):
-        return cls.from_json(json.loads(data))
+    def from_json_str(cls, data: str):
+        obj = json.loads(data)
+        if not isinstance(obj, dict):
+            msg = "Expected a single JSON object"
+            raise SourcemapParsingException(msg)
+        return cls.from_dict(obj)
 
     @classmethod
     def from_file(cls, path: AnyPath):
@@ -62,11 +94,18 @@ class Sourcemap:
         if not path.is_file():
             msg = f"File {path} is not a file"
             raise PyUnpackSourcemapException(msg)
-        data = path.read_text()
-        return cls.from_str(data)
+        data = path.read_text(encoding="utf-8")
+        return cls.from_json_str(data)
 
     def get_content_map(self) -> dict[str, str]:
-        return dict(zip(self.sources, self.sources_content, strict=True))
+        if not self.sourcesContent:
+            msg = "Source maps without the 'sourcesContent' field are not supported"
+            raise PyUnpackSourcemapException(msg)
+        if any(content is None for content in self.sourcesContent):
+            msg = (
+                "Source maps with 'null' elements in 'sourcesContent' are not supported"
+            )
+        return dict(zip(self.sources, self.sourcesContent, strict=True))
 
     def extract_into_directory(self, output_dir: AnyPath, *, overwrite: bool = False):
         output_dir = Path(output_dir)
@@ -87,7 +126,7 @@ class Sourcemap:
             source_path = source_path.replace("://", "/")
             target_path = output_dir.joinpath(source_path)
             target_path.parent.mkdir(parents=True, exist_ok=True)
-            target_path.write_text(source_content)
+            target_path.write_text(source_content, encoding="utf-8")
 
 
 def _is_dir_empty(path: Path):
