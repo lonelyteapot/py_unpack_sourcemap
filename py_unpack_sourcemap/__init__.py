@@ -2,8 +2,10 @@
 Unpack JavaScript source maps into source files
 """
 
-from ._main import (
+from ._exceptions import (
     PyUnpackSourcemapException,
+)
+from ._main import (
     Sourcemap,
     read_sourcemap_from_file,
     validate_sourcemap,

@@ -4,15 +4,10 @@ from os import PathLike
 from pathlib import Path
 from typing import Any, TypeAlias, Union
 
+from ._exceptions import PyUnpackSourcemapException
 from ._logging import logger
 
 AnyPath: TypeAlias = Union[Path, PathLike[str], str]
-
-
-# TODO: add subclasses
-@dataclass
-class PyUnpackSourcemapException(Exception):
-    message: str
 
 
 @dataclass
