@@ -1,9 +1,12 @@
 import json
 from dataclasses import dataclass
+from os import PathLike
 from pathlib import Path
-from typing import Any
+from typing import Any, TypeAlias, Union
 
 from ._logging import logger
+
+AnyPath: TypeAlias = Union[Path, PathLike[str], str]
 
 
 # TODO: add subclasses
@@ -46,7 +49,8 @@ def validate_sourcemap(sourcemap: Sourcemap):
         raise PyUnpackSourcemapException(errmsg)
 
 
-def read_sourcemap_from_file(path: Path):
+def read_sourcemap_from_file(path: AnyPath):
+    path = Path(path)
     logger.info(f"Reading {path}")
 
     # TODO: error handling
@@ -56,7 +60,8 @@ def read_sourcemap_from_file(path: Path):
     return sourcemap
 
 
-def write_source_contents_to_directory(sourcemap: Sourcemap, output_dir: Path):
+def write_source_contents_to_directory(sourcemap: Sourcemap, output_dir: AnyPath):
+    output_dir = Path(output_dir)
     logger.info(f"Extracting {len(sourcemap.sources)} sources into {output_dir}")
     for source_path, source_content in zip(
         sourcemap.sources, sourcemap.sources_content, strict=True
