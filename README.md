@@ -45,7 +45,7 @@ poetry add py_unpack_sourcemap
 ### As a command-line tool
 
 ```
-python -m py_unpack_sourcemap [-h] -o OUTPUT_DIR [--overwrite] sourcemap
+python py_unpack_sourcemap [-h] -o OUTPUT_DIR [--overwrite] [--ignore-source-root] sourcemap
 
 positional arguments:
   sourcemap             path to the source map (a .js.map file)
@@ -55,6 +55,7 @@ options:
   -o OUTPUT_DIR, --output-dir OUTPUT_DIR
                         a directory to extract source files into
   --overwrite           overwrite existing output directory
+  --ignore-source-root  ignore the 'sourceRoot' field, put files directly in the directory
 ```
 
 ### As a Python module
