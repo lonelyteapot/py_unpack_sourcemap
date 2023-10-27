@@ -1,0 +1,15 @@
+{
+  "version": 3,
+  "file": "min.js",
+  "names": [],
+  "sources": [
+    "one.js",
+    "two.js"
+  ],
+  "sourcesContent": [
+    " ONE.foo = 1;",
+    " TWO.inc = 2;"
+  ],
+  "sourceRoot": "",
+  "mappings": ""
+}
