@@ -13,6 +13,11 @@ def test_map_empty_mappings(out_dir):
     assert_diff("tests/goldens/mapEmptyMappings", out_dir)
 
 
+def test_map_with_sources_content(out_dir):
+    run_cli(f"data/mapWithSourcesContent.js.map -o {out_dir}")
+    assert_diff("tests/goldens/mapWithSourcesContent", out_dir)
+
+
 @pytest.fixture
 def out_dir() -> Path:
     out_dir = TESTS_DIR / "out"

@@ -107,7 +107,13 @@ class Sourcemap:
             )
         return dict(zip(self.sources, self.sourcesContent, strict=True))
 
-    def extract_into_directory(self, output_dir: AnyPath, *, overwrite: bool = False):
+    def extract_into_directory(
+        self,
+        output_dir: AnyPath,
+        *,
+        overwrite: bool = False,
+        ignore_source_root: bool = False,
+    ):
         output_dir = Path(output_dir)
         logger.info(f"Extracting {len(self.sources)} sources into {output_dir}")
         if not output_dir.parent.exists():
@@ -122,9 +128,15 @@ class Sourcemap:
                 "Delete it or consider using overwrite=True"
             )
             raise PyUnpackSourcemapException(msg)
+
+        source_root = "."
+        if not ignore_source_root and self.sourceRoot:
+            # TODO: Handle absolute and relative source roots differently
+            source_root = self.sourceRoot.removeprefix("/")
+
         for source_path, source_content in self.get_content_map().items():
             source_path = source_path.replace("://", "/")
-            target_path = output_dir.joinpath(source_path)
+            target_path = output_dir.joinpath(source_root, source_path).resolve()
             target_path.parent.mkdir(parents=True, exist_ok=True)
             target_path.write_text(source_content, encoding="utf-8")
 

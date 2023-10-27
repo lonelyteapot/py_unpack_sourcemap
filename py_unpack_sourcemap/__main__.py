@@ -18,6 +18,7 @@ class CliArguments(argparse.Namespace):
     sourcemap: Path
     output_dir: Path
     overwrite: bool
+    ignore_source_root: bool
 
 
 def parse_arguments(parser: argparse.ArgumentParser) -> CliArguments:
@@ -40,6 +41,11 @@ def parse_arguments(parser: argparse.ArgumentParser) -> CliArguments:
         action="store_true",
         help="overwrite existing output directory",
     )
+    parser.add_argument(
+        "--ignore-source-root",
+        action="store_true",
+        help="ignore the 'sourceRoot' field, put files directly in the directory",
+    )
     return parser.parse_args(namespace=CliArguments())
 
 
@@ -48,7 +54,11 @@ def main_unsafe() -> None:
     args = parse_arguments(parser)
 
     sourcemap = Sourcemap.from_file(args.sourcemap)
-    sourcemap.extract_into_directory(args.output_dir, overwrite=args.overwrite)
+    sourcemap.extract_into_directory(
+        args.output_dir,
+        overwrite=args.overwrite,
+        ignore_source_root=args.ignore_source_root,
+    )
 
 
 def main() -> None:
@@ -57,7 +67,7 @@ def main() -> None:
     try:
         main_unsafe()
     except PyUnpackSourcemapException as e:
-        logger.error(f"{e.message}")
+        logger.error("\n".join(e.args))
         sys.exit(DEFAULT_ERROR_RETCODE)
 
     logger.info("Done!")
