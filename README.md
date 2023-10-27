@@ -7,7 +7,6 @@ Unpack JavaScript source maps into source files
 [![PyPI - Status](https://img.shields.io/pypi/status/py_unpack_sourcemap)][PyPI]
 [![License](https://img.shields.io/github/license/lonelyteapot/py_unpack_sourcemap)][GitHub]
 
-
 ## Description
 
 This Python tool allows you to unpack JavaScript source maps into their
@@ -18,6 +17,10 @@ Modern browsers like Chrome and Firefox provide this functionality in DevTools.
 However, they only let you view the source code in the browser itself, which can
 be limiting. This tool allows you to extract the whole source tree for viewing
 it in your favourite IDE.
+
+This projects aims to follow the
+[Source Map Revision 3 Proposal](https://sourcemaps.info/spec.html).
+See [Roadmap](#roadmap) for what is currently lacking.
 
 ## Installation
 
@@ -36,13 +39,12 @@ Or [Poetry]:
 poetry add py_unpack_sourcemap
 ```
 
-
 ## Usage
 
 ### As a command-line tool
 
 ```
-python -m py_unpack_sourcemap [-h] -o OUTPUT_DIR sourcemap
+python -m py_unpack_sourcemap [-h] -o OUTPUT_DIR [--overwrite] sourcemap
 
 positional arguments:
   sourcemap             path to the source map (a .js.map file)
@@ -51,11 +53,24 @@ options:
   -h, --help            show this help message and exit
   -o OUTPUT_DIR, --output-dir OUTPUT_DIR
                         a directory to extract source files into
+  --overwrite           overwrite existing output directory
 ```
 
 ### As a Python module
 
 > No information here yet :( Use autocompletion or view the source code.
+
+## Roadmap
+
+- [ ] Support for fetching remote source maps via HTTP
+- [ ] Support for "null" elements in "sourcesContent" field
+- [ ] More tests
+- [ ] Support for "sourceRoot" field
+- [ ] Support for "names" field
+- [ ] Support for "mappings" field
+- [ ] "Index map" format ("sections" field)
+
+[//]: # "when editing, please remove entries instead of checking them off"
 
 ## Contributing
 
@@ -69,7 +84,6 @@ Don't be afraid to create issues for any features you need.
 ## License
 
 This project is licensed under the [MIT License](https://mit-license.org/).
-
 
 [GitHub]: https://github.com/lonelyteapot/py_unpack_sourcemap
 [PyPI]: https://pypi.org/project/py_unpack_sourcemap/
