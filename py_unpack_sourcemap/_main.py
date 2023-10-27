@@ -36,10 +36,16 @@ class Sourcemap:
 
     @classmethod
     def from_json(cls, data: dict[str, Any]):
+        data = data.copy()
+        version = data.pop("version")
+        sources = data.pop("sources", [])
+        sources_content = data.pop("sourcesContent", [])
+        for unsupported_key in data:
+            logger.warning('Unsupported key found in source map: "%s"', unsupported_key)
         return cls(
-            version=data.get("version", None),  # TODO: None does not belong here
-            sources=data.get("sources", []),
-            sources_content=data.get("sourcesContent", []),
+            version=version,
+            sources=sources,
+            sources_content=sources_content,
         )
 
     @classmethod
