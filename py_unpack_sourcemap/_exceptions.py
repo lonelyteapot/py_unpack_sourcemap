@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
 
+# TODO: Add subclasses
 @dataclass
-# TODO: add subclasses
 class PyUnpackSourcemapException(Exception):
     message: str

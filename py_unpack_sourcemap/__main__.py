@@ -7,13 +7,9 @@ import argparse
 import sys
 from pathlib import Path
 
+from ._exceptions import PyUnpackSourcemapException
 from ._logging import configure_logging_for_cli, logger
-from ._main import (
-    PyUnpackSourcemapException,
-    read_sourcemap_from_file,
-    validate_sourcemap,
-    write_source_contents_to_directory,
-)
+from ._main import Sourcemap
 
 DEFAULT_ERROR_RETCODE = 1
 
@@ -21,6 +17,7 @@ DEFAULT_ERROR_RETCODE = 1
 class CliArguments(argparse.Namespace):
     sourcemap: Path
     output_dir: Path
+    overwrite: bool
 
 
 def parse_arguments(parser: argparse.ArgumentParser) -> CliArguments:
@@ -38,33 +35,20 @@ def parse_arguments(parser: argparse.ArgumentParser) -> CliArguments:
         type=Path,
         help="a directory to extract source files into",
     )
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="overwrite existing output directory",
+    )
     return parser.parse_args(namespace=CliArguments())
-
-
-def validate_arguments(args: CliArguments) -> None:
-    if not args.sourcemap.is_file():
-        errmsg = f"{args.sourcemap} is not a file, expected path to a source map"
-        raise PyUnpackSourcemapException(errmsg)
-
-    if args.output_dir.exists():
-        if not args.output_dir.is_dir():
-            errmsg = f"{args.output_dir} is not a directory, expected a clean directory"
-            raise PyUnpackSourcemapException(errmsg)
-        has_files = any(True for _ in args.output_dir.iterdir())
-        if has_files:
-            errmsg = f"{args.output_dir} is not empty, expected a clean directory"
-            raise PyUnpackSourcemapException(errmsg)
 
 
 def main_unsafe() -> None:
     parser = argparse.ArgumentParser()
     args = parse_arguments(parser)
-    validate_arguments(args)
 
-    sourcemap = read_sourcemap_from_file(args.sourcemap)
-    validate_sourcemap(sourcemap)
-
-    write_source_contents_to_directory(sourcemap, args.output_dir)
+    sourcemap = Sourcemap.from_file(args.sourcemap)
+    sourcemap.extract_into_directory(args.output_dir, overwrite=args.overwrite)
 
 
 def main() -> None:
